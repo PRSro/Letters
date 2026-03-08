@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surprise!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .present {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .present:active {
+            transform: scale(0.95);
+        }
+
+        .present-lid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 180px;
+            height: 45px;
+            background: linear-gradient(135deg, #e94560 0%, #c73e54 100%);
+            border-radius: 10px 10px 0 0;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+            transform-origin: top center;
+            z-index: 3;
+        }
+
+        .present-lid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 100%;
+            background: #ffc947;
+        }
+
+        .present-lid::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            width: 100%;
+            height: 25px;
+            background: #ffc947;
+        }
+
+        .present-box {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 180px;
+            height: 140px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #e94560 100%);
+            border-radius: 0 0 10px 10px;
+            z-index: 2;
+        }
+
+        .present-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 100%;
+            background: #ffc947;
+        }
+
+        .present-box::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            width: 100%;
+            height: 25px;
+            background: #ffc947;
+        }
+
+        .present.opened .present-lid {
+            transform: rotateX(180deg) translateY(-50px);
+            opacity: 0;
+        }
+
+        .present.opened {
+            pointer-events: none;
+        }
+
+        .tap-hint {
+            position: absolute;
+            bottom: -50px;
+            color: #ffc947;
+            font-size: 16px;
+            animation: pulse 2s infinite;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .letter {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            z-index: 100;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .letter.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .letter-content {
+            width: 100%;
+            max-width: 550px;
+            background: #fffef5;
+            padding: 30px 25px 40px;
+            border-radius: 5px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.8) translateY(50px);
+            transition: transform 0.5s ease;
+            position: relative;
+            margin: auto 0;
+        }
+
+        .letter.visible .letter-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .letter-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 25px;
+            background: repeating-linear-gradient(
+                90deg,
+                #e94560,
+                #e94560 20px,
+                #ff6b6b 20px,
+                #ff6b6b 40px
+            );
+            border-radius: 5px 5px 0 0;
+        }
+
+        .letter-content h1 {
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            font-size: 24px;
+            margin-top: 15px;
+        }
+
+        .letter-content p {
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 35px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #e94560;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .close-btn:active {
+            transform: scale(0.9) rotate(90deg);
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffc947;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 1s ease forwards;
+        }
+
+        @keyframes sparkle {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="present" id="present">
+            <div class="present-lid"></div>
+            <div class="present-box"></div>
+        </div>
+        <div class="tap-hint">Tap to open!</div>
+    </div>
+
+    <div class="letter" id="letter">
+        <div class="letter-content">
+            <button class="close-btn" id="closeBtn">&times;</button>
+<p> Written by the best of the best of the best of the best that I have ever met, of and to make charm and grace surpass the naturalness of perfection itself, defying no limits of the world. Her name is Sofia and she is the best person I have ever met in this world, so wonderful even the angels will sing to her upon her arrival in heaven, and those who proove me wrong will regret it. How do I know this? I pray for her well-being every day and make sure that she never lacks happiness and that she can fight for herself. With the help of her 'regular' friend, me.</p>
+<p>
+I don't know how to start or express myself. I know it sounds stupid, but honestly, there is too much to say about such a wonderful person and I honestly can't get over the fact that I have such a person in my life, from the very beginning. I don't deserve you for the monster I am: I felt undervalued and underappreciated until you came into my life, managing to change things and make me feel special. A feeling that I would never feel again, a joy and excitement that I thought only existed in children. Maybe it's the beginning of love, but I can't be sure. I don't even know what I feel. I don't even know myself, but with you I manage to discover this person I really am. I am currently happy I am your best friend and i genuinely couldnt feel happier in my entire life if it werent for your presence.
+</p><p>
+Your gaze is an indescribable mixture of cold colors that hide the warning, but once looked at, the warmth can be felt even by a simple intruder, as I was in your life. I've been watching you for a while now and the more I look at you, the more I feel that we made the right choice to become friends. And as I look more and more, my soul comes alive with feelings and I can't help but wonder today why you are so beautiful and pretty, and yet I have barely seen you clearly, let alone in reality. You are more than you think. You don't have to show anything else or let people take advantage of your face, because at the jewel you are, not even the trillionaires will be able to see what they saw in you but will never be able to see what ive seen in you: home.
+</p><p>
+Maybe it's my imagination, maybe my feelings, but what is certain is that I feel safe when I am around you. No matter where you are, you make every situation seem like it has already happened, and with you the future seems brighter than anything in the universe. Together, two stars in the dark sky, we will manage to go beyond the light, to flourish and be successful in everything we do as we have not built our friendship. Just us and no one else between us. I will not let each other root. Never. I need you as much as you need me for a future together and I can't believe we've been so happy together until now.
+</p><p>
+I'm not here for nonsense or to waste time. I want something meaningful with you, that will pass the time and show how true friends are. With God's help. Even though I'm not who you make me out to be. Why? Because you become the reason why I chose to fight in life and be like this in the first place. With you I will never give up and I won't even dare to leave. I'm ready to face our ups and downs and fight for you, so that in the end you will get the prosperous life you deserve, with the people who make you happy.
+</p><p>
+I can't express myself anymore. I'm on a plane right now (yes, that's how long it took to write the letter, I started it during the flight home) and I don't even know why I'm writing this when you already know these things. You are so deserving and you need to believe in yourself more and not let others dare to upset you and stay here to help you with anything and everything you need, anytime, anywhere.
+</p><p>
+You are a gem in this world. You just can't see this precious person and I am so disappointed that to this day you don't accept all my compliments and yet you feel like you are hopeless. No! God has a place for you and you need to realize that no matter what, you will fight to become a better person and recover from your trauma. Everything I say comes from the bottom of my heart, you are worthy of such a miracle. Only for you. And yet I can't help but wonder what you think of me and how you see me. Well, you can answer here or another time, but make sure you know your true worth and accept yourself as you are, because that is called true perfection. Your insecurities and weaknesses are pulling you down and together we will mend each other in ways you have never seen before. Because I know full well that you make me the happiest person alive and I can’t help but start thinking about you and your well-being. All the time.
+</p><p>
+I’ve been writing this for 15 minutes now, but I have so much to say I can’t even get it out of my mouth. Why? You are more capable than you think and you need to remember what you want and fight for it so you don’t let it take over your mind. You are smart and you have your own pace. You need to insist on this and make sure you discipline yourself so that you can help and heal and recover. Because I can’t do all the work for you, God will. But I will fight for you and make sure that we live happily ever after, just like in the books. Together we will make sure that we are more than happy with each other andwhen something is wrong, we will have nothing to hide. I am ready and committed to each other and I will never let you down, no matter how you feel. With me you will never be bored.
+</p><p>
+After all, the clear sky is behind the clouds, we will clear all the fog from our path and we will make sure that we will be successful and happier than anyone can imagine. Since I am on the plane, I can already see the sky and I can't believe how small the world we live in is. I wish I could show you too. The world is bigger than you think when you see everything from other angles. However, others tend to surround themselves with the wrong people and places and I can't help but feel sorry for the world we live in. But I know that you are special and that you will succeed in life, no matter what it costs. We will work hard and make sure that no one can replace you until the end of our lives. You need to believe in yourself and motivate yourself as well to make sure you are happy and ready for the future.
+</p><p>
+I should have told you though: you are a truly remarkable and magnificent person and you need to see yourself better to start shining because I am sure that a person like you can outshine everyone around them with just a little effort and I will make sure to support you on your journey from now on, just like I have done so far. No promises are needed. Don’t expect any rewards because your happiness and satisfaction already bring joy to my heart and make it beat with enough passion for a lifetime, a beat I have never felt before, and I can’t help but thank God for what I have achieved and I want to continue and help you enjoy joy.
+</p><p>
+I cant stop but think of you. I was really scared to text since you seemed all fine and lovely and you genuinely seem like the perfect person. And you are all I can think of and I don't know how to tell you that you deserve even more words than I have written here, because you need to know well and keep in mind the facts that I have mentioned here and stop being insecure. At least with me. You need courage to succeed in life and to make sure that the story that we will write in destiny about us will continue to be happier and happier.I can't believe that I had such a fragile and delicate woman like you. I can't believe that I let my heart sink so much until you appeared and I can't imagine myself without someone like you. No. I cant imagine my life without u and going onward ill fight for us to meet each other and finally find each other in the other's arms. You have become essential to my well-being. You make me truly happy. You truly value me. And I can't be more than satisfied and happy for that and I'm glad that you are sincere and that you do everything. As if I just hit the lucky break and should stop looking because I’ve already found my soulmate.
+</p><p>
+I know these are harsh and bad words out of my mouth, since they are all an understatement of what u did to me, but the impact your presence has had on me cannot be undervalued considering how much they are capable of. And look at you: you don’t even see it. We complement each other and we are truly alike. I never get tired of you and moving forward, I wish you good luck, happiness, health and everything you desire!! Look how beautiful you are with those majestic and hypnotic eyes that got withered from all the pain you’ve been through. I will make sure to revitalize you and give you a spark that you’ve never seen in you before. Then there’s your majestic and shiny hair, as if made of silk and delicate to the touch, more well crafter than any tailor in the whole world, truly healthy and wonderful, too healthy to even be cut, but very, very strong. This hair holds your memories, but soon it will hold our most beautiful memories and I don't want you to disappear. That's why I will make sure that I am unforgettable, just like our love for each other, because every day I start to become more and more confident in my feelings for you
+</p><p>
+Then comes the shape of your body. I don't even look at the body in general, but from what I have seen, it captivates the illuminating shape of your soul: similar to an hourglass that will endure and you will not let it erode like others have done. I am proud of you and what you have achieved now and together with you we will take responsibility, learn from the past and only look forward from now on. I miss you so much and I can't wait to meet you one day and together we will make time worth living. Both the past and the future, because our present is already nothing in our hands and we will cherish it with all our soul and we will not ensure that it will not stand in the way: if we did not face an obstacle, we will not adapt and fight. Together. Forever. Until the end of time and until we take root together on the earth and there will be no more traces.
+</p><p>
+Sincerely,
+With the most love and care in the world. Someone..
+</p><p>
+P.S. When u feel ur sad save this letter and read it so that ik u think abt us and that u wanna be happy. I dont want u to suffer anymore
+</p>
+        </div>
+    </div>
+
+    <script>
+        const present = document.getElementById('present');
+        const letter = document.getElementById('letter');
+        const closeBtn = document.getElementById('closeBtn');
+        const tapHint = document.querySelector('.tap-hint');
+
+        function createSparkles(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = x + 'px';
+                sparkle.style.top = y + 'px';
+                sparkle.style.transform = `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`;
+                sparkle.style.animationDelay = Math.random() * 0.3 + 's';
+                document.body.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 1000);
+            }
+        }
+
+        function openPresent(e) {
+            if (present.classList.contains('opened')) return;
+
+            const rect = present.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            createSparkles(x, y);
+
+            present.classList.add('opened');
+            tapHint.style.opacity = '0';
+
+            setTimeout(() => {
+                letter.classList.add('visible');
+            }, 600);
+        }
+
+        present.addEventListener('click', openPresent);
+        present.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            openPresent(e);
+        });
+
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            letter.classList.remove('visible');
+        });
+
+        closeBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            letter.classList.remove('visible');
+        });
+
+        letter.addEventListener('click', (e) => {
+            if (e.target === letter) {
+                letter.classList.remove('visible');
+            }
+        });
+    </script>
+</body>
+</html>
